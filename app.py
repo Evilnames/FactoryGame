@@ -17,8 +17,6 @@ def allowedQuantity(quantity, howMuchAllowed):
 
 tickElapsed = 0
 
-# convoyers = {}
-
 conveyor1 = conveyor()
 conveyor1.coords['x'] = 3
 conveyor1.coords['y'] = 2
@@ -63,8 +61,8 @@ conveyor3.outCoords['y'] = 2
 oil = building()
 oil.name = "Oil Producer"
 oil.outputGood = "Oil"
-oil.maxOutputProduction = 1
-oil.productionTime = 1
+oil.maxOutputProduction = 2
+oil.productionTime = 2
 oil.outputStorageCapcity = 30
 oil.coords['x'] = 1
 oil.coords['y'] = 1
@@ -79,7 +77,7 @@ cement.maxOutputProduction = 1
 cement.productionTime = 4
 cement.outputStorageCapcity = 30
 cement.inputGoods = {
-    0 : {"inputRequired" : 2, "maxStorage" : 1, "currentInputStorage" : 0, "inputGood":"oil"}
+    0 : {"inputRequired" : 2, "maxStorage" : 30, "currentInputStorage" : 0, "inputGood":"oil"}
 }
 cement.coords['x'] = 4
 cement.coords['y'] = 4
