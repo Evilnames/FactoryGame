@@ -12,7 +12,7 @@ class building:
         self.inputGoods = {}
 
         #Connected conveyor
-        self.connectedConveyor = {}
+        self.connectedConveyor = []
 
         #Output Rules
         ##How many goods can I produce at one time?

@@ -15,6 +15,75 @@ def allowedQuantity(quantity, howMuchAllowed):
 
     return allowed
 
+
+def testConveyors(buildings, conveyors):
+    for building in buildings:
+        if(len(building.connectedConveyor) > 0):
+            #Will be the name of the conveyor belt
+            for connectedItem in building.connectedConveyor:
+                buildingPullConveyor(building, conveyors, connectedItem)
+
+def buildingPullConveyor(building, conveyors, connectedItem):
+
+    #Loop through each conveyor here
+    for conveyor in conveyors:
+        #If the conveyor is matching what is connected -- we could also create an index
+        #Of all conveyor belts with an ending point that falls within the factory...
+        if(conveyor.name == connectedItem):
+            #Get the top layer of the stack
+            convoyerFrontOfStack = conveyor.getCurrentTopOfConvoyer()
+            conveyor.processedThisTick = 1
+            if(convoyerFrontOfStack != None):
+                howMuchAllowed = building.howMuchOfGoodCanITake(convoyerFrontOfStack["inputGood"])
+                if(howMuchAllowed > 0):
+                    quantityToAccept = allowedQuantity(convoyerFrontOfStack["quantity"], howMuchAllowed)
+                    building.acceptIncomingGood(convoyerFrontOfStack["inputGood"], quantityToAccept)
+                    conveyor.removeOutgoingGood(quantityToAccept)
+
+            #check Connecting conveyors
+            checkConnectingConveyors(conveyor, conveyors, buildings)
+    
+
+def checkConnectingConveyors(conveyor, conveyors, buildings):
+    #Check to see if something is connected too me
+    conveyorFound = 0
+    for conveyorSister in conveyors:
+        if(conveyorSister.outCoords['x'] == conveyor.coords['x'] and conveyorSister.outCoords['y'] == conveyor.coords['y']):
+            conveyorFound = 1
+            pullConveyor(conveyorSister, conveyor)
+            checkConnectingConveyors(conveyorSister, conveyors, buildings)
+    #If we didn't find anything check the buildings
+    if(conveyorFound == 0):
+        for building in buildings:
+            if(building.coords['x'] == conveyor.inCoords['x'] and building.coords['y'] == conveyor.inCoords['y']):
+                print(building.coords['x'])
+                pullFromBuilding(conveyor, building)
+
+def pullConveyor(conveyorDownstream, conveyorUpstream):
+    #Conv 1 pull from Conv 2
+    frontOfStack = conveyorDownstream.getCurrentTopOfConvoyer()
+    conveyorDownstream.processedThisTick = 1
+    if(frontOfStack != None):
+        allowedC1 = conveyorUpstream.howMuchOfGoodCanITake()
+        if(allowedC1 > 0):
+            quantityToAccept = allowedQuantity(frontOfStack["quantity"], allowedC1)
+            conveyorUpstream.acceptIncomingGood(frontOfStack["inputGood"], quantityToAccept)
+            conveyorDownstream.removeOutgoingGood(quantityToAccept)
+
+def pullFromBuilding(conveyor, building):
+    #Conv 3 pull from Oil factory
+    getQueue = building.getOutputQuantity()
+    if(getQueue != 0):
+        allowedPullAmount = conveyor.howMuchOfGoodCanITake()
+        if(allowedPullAmount > 0):
+            quantityToAccept = allowedQuantity(getQueue, allowedPullAmount)
+            conveyor.acceptIncomingGood(building.outputGood, quantityToAccept)
+            building.removeOutgoingGood(quantityToAccept)
+
+
+buildings = []
+conveyors = []
+
 tickElapsed = 0
 
 conveyor1 = conveyor()
@@ -24,6 +93,7 @@ conveyor1.inCoords['x'] = 4
 conveyor1.inCoords['y'] = 2
 conveyor1.outCoords['x'] = 2
 conveyor1.outCoords['y'] = 2
+conveyor1.name = "C1"
 
 conveyor2 = conveyor()
 conveyor2.coords['x'] = 4
@@ -32,6 +102,7 @@ conveyor2.inCoords['x'] = 4
 conveyor2.inCoords['y'] = 3
 conveyor2.outCoords['x'] = 3
 conveyor2.outCoords['y'] = 2
+conveyor2.name = "C2"
 
 conveyor3 = conveyor()
 conveyor3.coords['x'] = 4
@@ -40,7 +111,11 @@ conveyor3.inCoords['x'] = 4
 conveyor3.inCoords['y'] = 4
 conveyor3.outCoords['x'] = 4
 conveyor3.outCoords['y'] = 2
+conveyor3.name = "C3"
 
+conveyors.append(conveyor1)
+conveyors.append(conveyor2)
+conveyors.append(conveyor3)
 
 # conveyor[0] = conveyor()
 # conveyor[1] = conveyor()
@@ -56,18 +131,20 @@ conveyor3.outCoords['y'] = 2
 
 
 
-
 #Define a sample building
 oil = building()
 oil.name = "Oil Producer"
-oil.outputGood = "Oil"
+oil.outputGood = "oil"
 oil.maxOutputProduction = 2
 oil.productionTime = 2
 oil.outputStorageCapcity = 30
-oil.coords['x'] = 1
-oil.coords['y'] = 1
+oil.coords['x'] = 4
+oil.coords['y'] = 4
 oil.coords['xSize'] = 2
 oil.coords['ySize']= 2
+
+
+buildings.append(oil)
 
 #Cement factory building
 cement = building()
@@ -79,66 +156,37 @@ cement.outputStorageCapcity = 30
 cement.inputGoods = {
     0 : {"inputRequired" : 2, "maxStorage" : 30, "currentInputStorage" : 0, "inputGood":"oil"}
 }
-cement.coords['x'] = 4
-cement.coords['y'] = 4
+cement.coords['x'] = 1
+cement.coords['y'] = 1
 cement.coords['xSize'] = 2
 cement.coords['ySize']= 2
+cement.connectedConveyor.append("C1")
 
+buildings.append(cement)
 
 # Main game loop
 while(1):
     os.system('clear')
     print(tickElapsed)
 
+    # Make sure that the conveyors get reset and dont get processed twice in one turn.
+    for conveyor in conveyors:
+        conveyor.processedThisTick = 0
+
+
     #All buildings produce things
-    cement.tick()
-    oil.tick()
+    for building in buildings:
+        building.tick()
 
+    #Loop through each building and see if they are at the end of a conveyor belt
+    testConveyors(buildings, conveyors)
 
-    #Convoyers that are connected to buildings pull forward
-    #Test version to test convoyers working with specific inputs/outputs
-    convoyerFrontOfStack = conveyor1.getCurrentTopOfConvoyer()
-    if(convoyerFrontOfStack != None):
-        howMuchAllowed = cement.howMuchOfGoodCanITake(convoyerFrontOfStack["inputGood"])
-        if(howMuchAllowed > 0):
-            quantityToAccept = allowedQuantity(convoyerFrontOfStack["quantity"], howMuchAllowed)
-            cement.acceptIncomingGood(convoyerFrontOfStack["inputGood"], quantityToAccept)
-            conveyor1.removeOutgoingGood(quantityToAccept)
+    for building in buildings:
+        print("Current " + building.name + " output pending : " + str(building.outputGoodsWaiting))
 
-    #Conv 1 pull from Conv 2
-    conv2FrontOfStack = conveyor2.getCurrentTopOfConvoyer()
-    if(conv2FrontOfStack != None):
-        allowedC1 = conveyor1.howMuchOfGoodCanITake()
-        if(allowedC1 > 0):
-            quantityToAccept = allowedQuantity(conv2FrontOfStack["quantity"], allowedC1)
-            conveyor1.acceptIncomingGood(conv2FrontOfStack["inputGood"], quantityToAccept)
-            conveyor2.removeOutgoingGood(quantityToAccept)
+    for conveyor in conveyors:
+        print(conveyor.name + " Goods : " + str(conveyor.inputGoods))
 
-    #Conv 2 pull from Conv 3
-    conv3FrontOfStack = conveyor3.getCurrentTopOfConvoyer()
-    if(conv3FrontOfStack != None):
-        allowedC2 = conveyor2.howMuchOfGoodCanITake()
-        if(allowedC2 > 0):
-            quantityToAccept = allowedQuantity(conv3FrontOfStack["quantity"], allowedC2)
-            conveyor2.acceptIncomingGood(conv3FrontOfStack["inputGood"], quantityToAccept)
-            conveyor3.removeOutgoingGood(quantityToAccept)
-
-    #Conv 3 pull from Oil factory
-    oilGetQueue = oil.getOutputQuantity()
-    if(oilGetQueue != 0):
-        allowedC3 = conveyor3.howMuchOfGoodCanITake()
-        if(allowedC3 > 0):
-            quantityToAccept = allowedQuantity(oilGetQueue, allowedC3)
-            conveyor3.acceptIncomingGood("oil", quantityToAccept)
-            oil.removeOutgoingGood(quantityToAccept)
-
-    print("C1 : ", conveyor1.inputGoods)
-    print("C2 : ", conveyor2.inputGoods)
-    print("C3 : ", conveyor3.inputGoods)
-        
-    print("Current Oil Output Pending ", oil.outputGoodsWaiting)
-    print("Current Cement Output:", cement.outputGoodsWaiting)
-    print("Current Cement Oil Input:", cement.inputGoods[0]['currentInputStorage'])
 
     tickElapsed += 1
     time.sleep(1)

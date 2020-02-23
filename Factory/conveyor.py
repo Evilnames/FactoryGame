@@ -3,7 +3,7 @@ class conveyor:
     def __init__(self):
         #Location on Grid
         self.coords = {'x':0,'y':0,'xSize':1,'ySize':1}
-
+        self.name = ""
         self.inCoords = {'x':0, 'y':0}
         self.outCoords = {'x':0, 'y':0}
 
@@ -11,6 +11,8 @@ class conveyor:
         self.timeToMove = 1
         self.maximumAllowedQuantity = 2
         self.currentQuantityAmount = 0
+
+        self.processedThisTick = 0
 
         # {inputGood : "Cement", quantity:2}
         self.inputGoods = {}
