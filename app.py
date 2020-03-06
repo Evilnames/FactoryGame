@@ -56,7 +56,6 @@ def checkConnectingConveyors(conveyor, conveyors, buildings):
     if(conveyorFound == 0):
         for building in buildings:
             if(building.coords['x'] == conveyor.inCoords['x'] and building.coords['y'] == conveyor.inCoords['y']):
-                print(building.coords['x'])
                 pullFromBuilding(conveyor, building)
 
 def pullConveyor(conveyorDownstream, conveyorUpstream):
@@ -113,9 +112,19 @@ conveyor3.outCoords['x'] = 4
 conveyor3.outCoords['y'] = 2
 conveyor3.name = "C3"
 
+conveyor4 = conveyor()
+conveyor4.coords['x'] = 1
+conveyor4.coords['y'] = 3
+conveyor4.inCoords['x'] = 1
+conveyor4.inCoords['y'] = 1
+conveyor4.outCoords['x'] = 1
+conveyor4.outCoords['y'] = 4
+conveyor4.name = "C4"
+
 conveyors.append(conveyor1)
 conveyors.append(conveyor2)
 conveyors.append(conveyor3)
+conveyors.append(conveyor4)
 
 # conveyor[0] = conveyor()
 # conveyor[1] = conveyor()
@@ -124,9 +133,9 @@ conveyors.append(conveyor3)
 # 0 
 # 1    x  x
 # 2    x  x  =  =
-# 3             =
-# 4             x  x
-# 5             x  x
+# 3    =        =
+# 4    X  X     x  x
+# 5    X  X     x  x
 # 6
 
 
@@ -142,7 +151,6 @@ oil.coords['x'] = 4
 oil.coords['y'] = 4
 oil.coords['xSize'] = 2
 oil.coords['ySize']= 2
-
 
 buildings.append(oil)
 
@@ -161,8 +169,24 @@ cement.coords['y'] = 1
 cement.coords['xSize'] = 2
 cement.coords['ySize']= 2
 cement.connectedConveyor.append("C1")
-
 buildings.append(cement)
+
+cementSeller = building()
+cementSeller.name = "Cement Seller"
+cementSeller.outputGood = "money"
+cementSeller.maxOutputProduction = 1
+cementSeller.productionTime = 2
+cementSeller.outputStorageCapcity = 99
+cementSeller.productionTime = 1
+cementSeller.inputGoods = {
+    0 : {"inputRequired" : 1, "maxStorage" : 999, "currentInputStorage":0, "inputGood":"cement"}
+}
+cementSeller.coords['x'] = 1
+cementSeller.coords['y'] = 4
+cementSeller.coords['xSize'] = 2
+cementSeller.coords['ySize']= 2
+cementSeller.connectedConveyor.append("C4")
+buildings.append(cementSeller)
 
 # Main game loop
 while(1):
